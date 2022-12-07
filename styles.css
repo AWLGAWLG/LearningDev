@@ -5,16 +5,17 @@ body {
 }
 
 text {
-  font-family: SFMono-Regular, Consolas, Liberation Mono,
-    Menlo, monospace;
+  font-family: SFMono-Regular, Consolas,
+    Liberation Mono, Menlo, monospace;
   fill: white;
   pointer-events: none;
 }
 
 line {
-  stroke: white;
+  stroke: #333;
 }
 
 .area:hover {
   fill: black;
+  stroke: white;
 }

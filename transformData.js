@@ -10,42 +10,57 @@ import {
 } from 'd3';
 import { blur } from 'array-blur';
 
+const blurRadius = 15;
+
 const parseDate = timeParse('%Y-%m-%d');
 
-const layer = d => d.repo;
+const layer = (d) => d.repo;
 
 export const transformData = (data) => {
+  //data = data.filter(d => d.repo !== 'd3');
   data.forEach((d) => {
-    d.date = utcWeek.floor(parseDate(d.date.split(' ')[0]));
+    d.date = utcWeek.floor(
+      parseDate(d.date.split(' ')[0])
+    );
   });
 
-  // Aggregate by month and repository.
+  // Aggregate by week and repository.
   const groupedData = group(
     data,
     (d) => d.date,
     layer
   );
-  
 
   const layerGroupedData = group(data, layer);
 
-  const layers = Array.from(layerGroupedData.keys());
+  const layers = Array.from(
+    layerGroupedData.keys()
+  );
 
-  const [start, stop] = extent(data, (d) => d.date);
+  const [start, stop] = extent(
+    data,
+    (d) => d.date
+  );
   const allWeeks = utcWeeks(start, stop);
 
   const dataBylayer = new Map();
 
-  for (let layer of layers) {
+  for (const layer of layers) {
     const layerData = allWeeks.map((date) => {
       const value = groupedData.get(date);
-      const commits = value ? value.get(layer) : null;
-      const commitCount = commits ? commits.length : 0;
+      const commits = value
+        ? value.get(layer)
+        : null;
+      const commitCount = commits
+        ? commits.length
+        : 0;
       return commitCount;
     });
 
     // Apply smoothing
-    const smoothedLayerData = blur().radius(20)(layerData);
+    const smoothedLayerData = blur().radius(
+      blurRadius
+    )(layerData);
 
     dataBylayer.set(layer, smoothedLayerData);
   }

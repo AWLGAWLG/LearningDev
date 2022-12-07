@@ -1,2 +1,1 @@
-# LearningDev
-This is a repo for my personal education.
+This is an experiment in visualizing [D3 Git History](https://gist.github.com/curran/18287ef2c4b64ffba32000aad47c292b).
