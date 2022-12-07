@@ -1,0 +1,104 @@
+import {
+  json,
+  scaleTime,
+  extent,
+  max,
+  min,
+  scaleLinear,
+  area,
+  select,
+  scaleOrdinal,
+  hcl,
+  randomNormal,
+  randomLcg,
+  axisTop,
+} from 'd3';
+import { areaLabel } from 'd3-area-label';
+import { transformData } from './transformData';
+
+const dataURL =
+  'https://gist.githubusercontent.com/curran/18287ef2c4b64ffba32000aad47c292b/raw/eb2dd48d383f09a70b23dc35c3e8eb7b6c7c31ad/all-d3-commits.json';
+
+const width = window.innerWidth;
+const height = window.innerHeight;
+
+const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+
+const innerWidth = width - margin.left - margin.right;
+const innerHeight = height - margin.top - margin.bottom;
+
+const xValue = (d) => d.date;
+
+const render = ({ data, stackedData }) => {
+  const xScale = scaleTime()
+    .domain(extent(data, xValue))
+    .range([0, innerWidth]);
+
+  const yScale = scaleLinear()
+    .domain([
+      min(stackedData, (d) => min(d, (d) => d[0])),
+      max(stackedData, (d) => max(d, (d) => d[1])),
+    ])
+    .range([innerHeight, 0]);
+
+  const areaGenerator = area()
+    .x((d) => xScale(d.data.date))
+    .y0((d) => yScale(d[0]))
+    .y1((d) => yScale(d[1]));
+
+  const svg = select('body')
+    .append('svg')
+    .attr('width', width)
+    .attr('height', height);
+
+  const g = svg
+    .append('g')
+    .attr(
+      'transform',
+      `translate(${margin.left},${margin.top})`
+    );
+
+  const random = randomNormal.source(randomLcg(0.5))(
+    30,
+    10
+  );
+
+  const colorScale = scaleOrdinal().range(
+    stackedData.map((country, i) => {
+      const t = i / stackedData.length;
+      return hcl(t * 360, 50, random());
+    })
+  );
+
+  g.append('g').call(axisTop(xScale).tickSize(-innerHeight))
+
+  g.append('g')
+    .selectAll('path')
+    .data(stackedData)
+    .enter()
+    .append('path')
+    .attr('class', 'area')
+    .attr('d', areaGenerator)
+    .attr('fill', (d) => colorScale(d.key))
+    .attr('transform', (d, i) => `translate(0,${i})`)
+    .append('title')
+    .text((d) => d.key);
+
+  const labels = g
+    .append('g')
+    .selectAll('text')
+    .data(stackedData);
+  
+//   labels
+//     .enter()
+//     .append('text')
+//     .attr('class', 'area-label')
+//     .merge(labels)
+//     .text((d) => d.key)
+//     .attr('transform', d3.areaLabel(areaGenerator));
+};
+
+// Load the data.
+json(dataURL).then((data) => {
+  render(transformData(data));
+});
